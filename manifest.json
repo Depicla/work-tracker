@@ -1,10 +1,10 @@
 {
-  "name": "Work Time Tracker",
+  "name": "WorkLog Pro",
   "short_name": "WorkLog",
   "start_url": "index.html",
   "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#007AFF",
+  "background_color": "#0f172a",
+  "theme_color": "#6366f1",
   "icons": [
     {
       "src": "icon.png",

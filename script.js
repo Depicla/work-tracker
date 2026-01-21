@@ -1,15 +1,31 @@
+// Registrazione Service Worker per iOS PWA
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js').then(() => console.log("SW Registered"));
+}
+
 let db = JSON.parse(localStorage.getItem('workDB')) || {};
 
 document.addEventListener('DOMContentLoaded', () => {
     const todayStr = new Date().toISOString().split('T')[0];
     document.getElementById('current-date-picker').value = todayStr;
     
-    // Inizializza filtri Analisi
+    // Inizializza Anni
     const yearSel = document.getElementById('filter-year');
-    for(let y = 2026; y >= 2024; y--) {
-        let o = document.createElement('option'); o.value = y; o.innerText = y; yearSel.appendChild(o);
+    for(let y = 2030; y >= 2024; y--) {
+        let o = document.createElement('option'); o.value = y; o.innerText = y;
+        if(y === 2026) o.selected = true;
+        yearSel.appendChild(o);
     }
-    document.getElementById('filter-month').value = new Date().getMonth();
+    
+    // Inizializza Mesi
+    const monthNames = ["Gennaio","Febbraio","Marzo","Aprile","Maggio","Giugno","Luglio","Agosto","Settembre","Ottobre","Novembre","Dicembre"];
+    const monthSel = document.getElementById('filter-month');
+    monthNames.forEach((m, idx) => {
+        let o = document.createElement('option'); o.value = idx; o.innerText = m;
+        if(idx === new Date().getMonth()) o.selected = true;
+        monthSel.appendChild(o);
+    });
+
     document.getElementById('filter-week-date').value = todayStr;
 
     loadDay(todayStr);
@@ -17,7 +33,6 @@ document.addEventListener('DOMContentLoaded', () => {
     setInterval(updateCountdown, 1000);
 });
 
-// --- NAVIGAZIONE ---
 function showSection(id) {
     document.querySelectorAll('.app-section').forEach(s => s.style.display = 'none');
     document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
@@ -27,25 +42,15 @@ function showSection(id) {
     if(id === 'analysis') renderAnalysis();
 }
 
-// --- UTILITY TEMPO ---
-function timeToMins(t) {
-    if(!t) return 0;
-    const [h, m] = t.split(':').map(Number);
-    return h * 60 + m;
-}
-
-function minsToTime(m) {
-    const hh = Math.floor(m / 60);
-    const mm = Math.floor(m % 60);
-    return `${String(hh).padStart(2, '0')}:${String(mm).padStart(2, '0')}`;
-}
+function timeToMins(t) { if(!t) return 0; const [h, m] = t.split(':').map(Number); return h * 60 + m; }
+function minsToTime(m) { const hh = Math.floor(m / 60); const mm = Math.floor(m % 60); return `${String(hh).padStart(2, '0')}:${String(mm).padStart(2, '0')}`; }
 
 function formatHHMM(m) {
     const absM = Math.abs(m);
     const hh = Math.floor(absM / 60);
     const mm = absM % 60;
     const icon = m >= 0 ? "↑" : "↓";
-    const color = m >= 0 ? "var(--pos)" : "var(--neg)";
+    const color = m >= 0 ? "#22c55e" : "#ef4444";
     return `<span style="color:${color}">${icon} ${hh}h ${mm}m</span>`;
 }
 
@@ -61,7 +66,6 @@ function calculateDayMins(d) {
     return (end - start - lunch) + extra;
 }
 
-// --- LOGICA CORE ---
 function calculateLogic() {
     const d = {
         in: document.getElementById('time-in').value,
@@ -79,7 +83,6 @@ function calculateLogic() {
         if(d.lS && d.lE) lunch = Math.max(30, Math.min(90, timeToMins(d.lE) - timeToMins(d.lS)));
         const exitMins = timeToMins(d.in) + needed + lunch;
         document.getElementById('suggested-exit').innerText = minsToTime(exitMins);
-        
         if(d.out) {
             const worked = calculateDayMins(d);
             document.getElementById('daily-total').innerText = `${Math.floor(worked/60)}h ${worked%60}m`;
@@ -101,23 +104,21 @@ function loadDay(date) {
         document.getElementById('absence-type').value = d.type || 'none';
         document.getElementById('abs-start').value = d.aS || '';
         document.getElementById('abs-end').value = d.aE || '';
-    } else {
-        document.getElementById('absence-type').value = 'none';
-    }
+    } else { document.getElementById('absence-type').value = 'none'; }
     toggleAbsenceFields();
     calculateLogic();
 }
 
 function saveLogic() {
     const mainDate = document.getElementById('current-date-picker').value;
-    const start = document.getElementById('range-start').value;
-    const end = document.getElementById('range-end').value;
+    const startStr = document.getElementById('range-start').value;
+    const endStr = document.getElementById('range-end').value;
     const type = document.getElementById('absence-type').value;
 
-    if (start !== end) {
-        let curr = new Date(start);
-        const last = new Date(end);
-        while(curr <= last) {
+    if (startStr !== endStr) {
+        let curr = new Date(startStr);
+        let end = new Date(endStr);
+        while(curr <= end) {
             db[curr.toISOString().split('T')[0]] = { type, in:'', out:'', lS:'', lE:'', aS:'', aE:'' };
             curr.setDate(curr.getDate() + 1);
         }
@@ -154,17 +155,16 @@ function updateGlobalSurplus() {
 function updateCountdown() {
     const exitStr = document.getElementById('suggested-exit').innerText;
     if(exitStr !== '--:--') {
-        const [h, m] = exitStr.split(':');
+        const [h, m] = exitStr.split(':').map(Number);
         const exitTime = new Date(); exitTime.setHours(h, m, 0);
         const diff = exitTime - new Date();
         if(diff > 0) {
             const hh = Math.floor(diff/3600000); const mm = Math.floor((diff%3600000)/60000); const ss = Math.floor((diff%60000)/1000);
             document.getElementById('countdown-timer').innerText = `${hh}h ${mm}m ${ss}s`;
-        } else { document.getElementById('countdown-timer').innerText = "Puoi uscire!"; }
+        } else { document.getElementById('countdown-timer').innerText = "Fine turno!"; }
     }
 }
 
-// --- ANALISI & STORICO ---
 function renderHistory() {
     const list = document.getElementById('history-list');
     const filter = document.getElementById('history-filter').value;
@@ -185,22 +185,21 @@ function renderHistory() {
 function deleteDay(date) { if(confirm("Eliminare?")) { delete db[date]; localStorage.setItem('workDB', JSON.stringify(db)); renderHistory(); updateGlobalSurplus(); } }
 
 function renderAnalysis() {
-    const y = parseInt(document.getElementById('filter-year').value);
-    const m = parseInt(document.getElementById('filter-month').value);
-    const wd = new Date(document.getElementById('filter-week-date').value);
+    const year = parseInt(document.getElementById('filter-year').value);
+    const month = parseInt(document.getElementById('filter-month').value);
+    const weekInput = new Date(document.getElementById('filter-week-date').value);
     
-    // Calcolo Lunedì della settimana
-    const day = wd.getDay() || 7;
-    const mon = new Date(wd); mon.setDate(wd.getDate() - day + 1);
+    const day = weekInput.getDay() || 7;
+    const mon = new Date(weekInput); mon.setDate(weekInput.getDate() - day + 1);
     const sun = new Date(mon); sun.setDate(mon.getDate() + 6);
 
     let wM = 0, mM = 0, yM = 0;
     Object.keys(db).forEach(dateStr => {
         const d = new Date(dateStr);
         const surplus = calculateDayMins(db[dateStr]) - 480;
-        if(d.getFullYear() === y) {
+        if(d.getFullYear() === year) {
             yM += surplus;
-            if(d.getMonth() === m) mM += surplus;
+            if(d.getMonth() === month) mM += surplus;
         }
         if(d >= mon && d <= sun) wM += surplus;
     });
@@ -208,24 +207,11 @@ function renderAnalysis() {
     document.getElementById('res-week').innerHTML = formatHHMM(wM);
     document.getElementById('res-month').innerHTML = formatHHMM(mM);
     document.getElementById('res-year').innerHTML = formatHHMM(yM);
-    document.getElementById('range-week').innerText = `Dal ${mon.toLocaleDateString()} al ${sun.toLocaleDateString()}`;
-    document.getElementById('range-month').innerText = `Mese di ${document.getElementById('filter-month').options[m].text}`;
-    document.getElementById('range-year').innerText = `Anno ${y}`;
+    document.getElementById('range-week').innerText = `${mon.toLocaleDateString()} - ${sun.toLocaleDateString()}`;
+    document.getElementById('range-month').innerText = `Mese selezionato`;
+    document.getElementById('range-year').innerText = `Anno selezionato`;
 }
 
-// --- EXPORT ---
-function exportBackup() {
-    const blob = new Blob([JSON.stringify(db)], {type: 'application/json'});
-    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'backup_work.json'; a.click();
-}
-function exportToCSV() {
-    let csv = "Data,Entrata,Uscita,Tipo\n";
-    Object.keys(db).sort().forEach(k => csv += `${k},${db[k].in},${db[k].out},${db[k].type}\n`);
-    const blob = new Blob([csv], {type: 'text/csv'});
-    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'timbrate.csv'; a.click();
-}
-function importBackup(e) {
-    const reader = new FileReader();
-    reader.onload = (event) => { db = JSON.parse(event.target.result); localStorage.setItem('workDB', JSON.stringify(db)); location.reload(); };
-    reader.readAsText(e.target.files[0]);
-}
+function exportBackup() { const blob = new Blob([JSON.stringify(db)], {type: 'application/json'}); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'backup_work.json'; a.click(); }
+function exportToCSV() { let csv = "Data,Entrata,Uscita,Tipo\n"; Object.keys(db).sort().forEach(k => csv += `${k},${db[k].in},${db[k].out},${db[k].type}\n`); const blob = new Blob([csv], {type: 'text/csv'}); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'timbrate.csv'; a.click(); }
+function importBackup(e) { const reader = new FileReader(); reader.onload = (event) => { db = JSON.parse(event.target.result); localStorage.setItem('workDB', JSON.stringify(db)); location.reload(); }; reader.readAsText(e.target.files[0]); }
