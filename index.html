@@ -3,22 +3,28 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="WorkLog">
+    
+    <link rel="apple-touch-icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAYAAABw4pVUAAAMlUlEQVR4nO2dX2xb133Hv+feX4oiKdlSZduSbCexE7uNnSR9SRtk87Y0D/3YQ7cg3d7aXnrru0G6vW7w0A0etg1YgX7oFmCB9rA+ZNuAYl2yE0Uf7G0NsmF9k2I5iS05kR1LsiVLliWRkvh779mDO3KUSOq/t5SSc3z/AEWR3HO+P/d77jm/cx4hBBAgQIAAAQIECCBEH6FqQd0sD759/vFhD2F/p252/vC3Pjh5Zc2zP+jBq2/i5w9f/tq8Z37wgz738LOn/7C9oN6e63G/f3T00Zdf+8P3L/gC+yI/f/hH/3bI4x6Z6zE/eP10z8g/fF8BQQgqgBAAQQQJAAQg+AEI637xN3/+5d/5z//5h3/0Nf0Nf3/8v/7h00eP7gH7pP7u6Ogz4w+PXnn99M32gno71+N++tEHJ6+053rcv891u69efu2Dk88+94d/8X3rB/bJ/eLw5a/Nu37w97n23I+OPvrJ66dvtufb353rcb/7sQICgEASIBEEIEAQQCIIQCBJEkACgBBBgCQABCBJAkggCQgQQYAkAASQSJIEkAggRBBAAkCIBCCABJCkIADJpCSBJAAEEJAAIoIEAJIAEkECSCQJIElBAImkJICkIEkASQAIIJGAABJJQEACSAQhAkkgKQhAAoIEkEiQpIAkkpIAEkECApICCCSQBAQkgEQQSAoQkgASQQICSCSRpABJCiKBBJIkkKSgIJAEkAggKQgQQYgkKSCBBCAgEaQAAUkKSCIpCBAkKYgQBIhEUhAgKQgQSZKCAAEiSCJBkoKABJBIkgIEKQgQJJIUQJICEkBSSAoCpCAAASRBkoKEoAAkCSQFIJJCgCAgIUAQkKSgpBAkBCSBBAkISAEICZICgKQAQQBCgqSAIEAASUIBkiAoQBIISYIACEKSEAQIApIIQoKgIAgISaKgIAhISaKCIBFSIkFSUFASKEhCQVAAQpIEQUFQkpQEQZAIKRMEBUFIUioIEoIkCJIqISVCIgiKJAkKkghCkiQISRIQBJIgIIkECcKkSCIpEiQpICVIglSCQApAioSkgECKAEmQBEkhIUlKkBCQApBCglRJSUIgKQhAkgQJSVIkCUhSgpASQRIISUJBkoJAEiQpEEiSICkISSIoCIkECUIqSVJKEEhKAEhKgCQIEoIEgSRISZCQAJIgSUJIEgRBgJRICKRISBIkpARIkiCBJEmQICkBCUFACiQJgpQkkJRAkCQpQQqCpAQJCUAqKQkkCUFKkECQBElSEhIEgRRICkISSIKkgpAkQZIEQSBBgpAUIEmSEpCgBIkEJYEECEFKCUhQElIqKEhJAEmClJAkKUkKJKlIkBCSJEEqQSoICVIgSUFAEpAUhJQSSFKCJEmCJEkISUoKQJICQQKSCgJCkgQIQZKAJElQkgQhSEJAkkiSICEIkkACJEASBCAIIElJQJJEEARICRIEpJSSAkGSJEkKkCQJgKRCkoQkkJKSoCAJCgICSZKkQEISgJIEAQiCIEmClIQUBIQUIAkBkJKQQJKkICSJJEVJgpAKAEgKEoKSBCVBgiSQpIAkAUGSBAlKkJQkKQlIQpKSlCAFIUmQBAGQlKSUgpQkKUlBCklKAEiCJAlKQgKkgJQgCQKCkgSQApCUBECSKpCSIEEAJAAkKQEpJSEIKZCSkAQBkqRQgiSFJEkQJIUgISkBSkFSChKSlIIUJEhJgKRAkEpSKgipkCQICkhSgpQESJIQKUhSgBCSBEEJSkEKBElBgpAkSUFIgISglIIUQJISBKlIUKogJQgqQQBBUgqSFAASBCgQQFKCkABJQZKkQEKSkkBKgiRFSkFASpCCkEpKAoKCEiQIEgSkJCGpFAhJQgqkpCCokgJBKUkIQpIUKUFIkiQBkgJKkiRJQpKUICEIUpJCkCBIgQBJUpKQJCUlIalISAEgSUkSBCkpCQqAlCQIKiQJCgRBUoKkJEEAIQlJCkhSgqSSJCgFKQBIUpASBEnSUEpSQYAkICmQpCQJKiQBCZKUIEApBCkACQGSBCRJSklSkgIpJEkACUIKJCVJQhAASZAKSEoCQhIEQZIEKQAEISlBCoKSJKWQBCRJkISABIlUSJIQJEkSKUlCglKCQJIUQJCSgBAkgJKUkCQBCZKUBClISkhJgoQkSUkSKQEkCQoCpIQkKUGSJJCUlIQUBCklSUJBUBIqSVKSlICglCQhCkhSKRCUpJCkBCmQhICUJCWpgpKQAkkgKUlBCgJQgJQgKRIkISQpgKSkJEgSBEFBkiQJkiQIkiQlKEECgiQBCUoQBEEQBIQEASRJCUmCkgQlSUESUoIEJUmSBCQJAEiCkKRAEJIECQBSApQgSEgCkoIkKUEAkiQpAEpSKkGSEJQkSAEpCYIEKUlIgCSQgJQQkCSEBAEIgBCkIAlIQkiCBKSCkKRAkiBBKUFISUAQSJIUBCWpIEBJgqRCEkiSpACkJKkglCApKUkqCEBKQJIUJCUISAEgQZIEBUKQJCUBSUEQJAQJSglSkAQAJEGSgpIkQQAkAQgIQoICAUoCkiTJKgQgSUoQBCQIEgBBUopIQgJSUoJUSFJACpJAkgIISEKSCkkCSAkCgJQkQQkgSRIUCFISBISEJAFJQYIUJCUgKUlKgCQFQQJICJIkSUKCoEAIBAlIkoKgICEISJAkkApBUoKSlCRIgqSSJCgoCQqCJCkBQEgqCEkKSYJSQJKUBICgJCgpSVIgSQhKkgQBUpIQSJIkQZIUSJKCJEFIKUGSkpIkSVJCSBJIkgQBCEoKUpCSBCkpJSBJEJAESYKUQJIECYKkhJAESQKSEJAkSJKSlCCoEICUklSSFAgpIEkSAgIkSQoEJAFKQVIqQQCkIIAgSUJKkCQJSgBJEkqCpJIkKQBSkiBIggQpSZKkJAgISQpIkgRJCSFBkgSBIEhJkJCQQJCUICBBKgkSQpKSkCRIkgAFAQhIEoKgICkkSZKAkIKgIKkgSFAKgiQgCUFJgiAlCYIEpRAkqQQFSUoSBIQEAUiCIAWSJEhQSpJASRIgSVJISkICUpCSgJRSEiRIUiBIgpAEICUJggSkBCBJkJQkpQIJAEpCCpJEkqQEJUhKQZIECZKkpCBIShJIgKSEoAQJSEFIgBQSJIUgqSSlAkHCSlACkpKkUJAkCCQJElKCoEKSJEhQQpKSEAQJSkoQJAQBCUJSApKQIEgIEiSoIEkCIJGSJElIkgApQZKkJEGQBEESFKAkKEFKgoKEJClIQYKgJCUIkhJASkhCQJKSoJCEkIQUBIQgCZCUAgFBkiBBUkpIUqQEkpQEQJKUIKkgSUmCBEEqSVAQBKSEJCUoSBIUpJRKgoKEIEhKgpASBIgkCUoKJCVISUgASUqClJSkQIIESUEKgpQESJKQJEhIQAkCUiAkKEkKKUmClCAICJIkQZKChCSlAAmCBKUEJSBJUlIKgqSkJKgUBAlBUpJCkBAEJSUIAkiSlKCkJCgBCEGSECSBpCRAQkASkJCUlCRIAkgSBKQQqSQJQEpBCoAkCUqQBIEESEmQIEkISiABKQUokCApCUJSSpCSgpASpABIAJAUQJAkBQGQAEmKBEgJQAlICpAQICmQJEkJApBUkKSUgKQCISQBCAFKgSQFJEgIQlKAhCSkkAQISgIqBEkKApASJCQJSEpCCpIkSJKCJEFICZJAkgISkpSUJEgSkhKkQJKEAkEBICglCAlSUoCQEpISBCEISlJSEpKgpCAkSSopCQhBUIBSEISUJKkkSZKCJCRBUEpIgqSSBCkhCQJCUkpIUpIUCEESJKSCgCSpACQJACQpICgkKQkCSgJISYIkCEJKgqAEKUkKQkgKQJCSkiQBQAIEpCAhBCkpCUkIgoKkJClBUpISBKQkQQmSlJJCSEJJSBIkSJAQKRAEIUmCkCQJUpCUJCkFSUFIIElISYIQJIQkIQkkJEhKkJKQJEhJkCRAKkmSkKQECZKkoAAoBSmQEiRIgoJSkgAlBZIUSJKCkBKkkgRAUgJCUpKkgKQEpSQJAhKQJAkkISBBEJIkSUkSCJKkQJKCkpCUICQlJUlSKpGUpJSUkISgBCkFJQhIkhSQJAQoSUFBCQlKCgIJCQgIkgQIgJRSEJKQJEgIKUAqSUpSEAQlQYIUCCFBUoISpCAoJSEFAZKkBEESBCkJClKSkJKCECRJSZKUpIJSQKqQkhQgKCUIQpIkBSklIEBSEKSCoKQEpCQBSUhJQJIkKQhAUpBCQgKQlCCQlKQEQpCSJCgoCEoCkpQgJQEJAkhSAqQgCAlSECRJggAJglKAQJKgAKQEISkpSZCSAkECkpSklCRASiBJKUiQIEgBSUqQkhSAlAokIQlKCkJKkpKEIEBSEiSlJKUkJUEpJCgpCUopKQWlIEESpCRIQEKSIAhSkARIEJCSICmQJEkBCFIIUpIKkiQBCUlCChKSJCEIQoIUCJIkQQIIUpJKUiBJAEKSoCBIQkpKgkBIkkACUoKAJEGCIJBSApJSSkhJQElSUpJIECAJSgJKkhCkkICAlCCQJCgJkiRBKklSkgQBQUpIkiABJEkIQkCSJAkISpISkpSkAEFJCSAoKUhKgIQgKUGQIEkCJElSUpIUpISkJElJkgBBkqSkkKRISlCSIEEgSZIUJKQEISAlCUJSkCRIgqQgSAmSIEFKkhSQIEgQBCkpSJKUkCRIkhSkEJAECUFSgpCUkARIECApSUlSEISkpEASpCRICpKUhJKCJCgkKQBJkhSklKSUIAVJkhQkIQlSQQgCUEopKUlSUpJKkgQgSZKkJIlEQkiSlKSQpISQJKUEAUEKAgQJSgKCUpIEQYKSgqQCBCFIkKQgBSkBQpKAJCUgCQhBSkqCpIAESJIUCEFSUkqSUpKkBElSCkBICZJICpKQpJKgJAkSAoIgCEFKkISUJKiQlKAUIAlIkgSlIAGSAgBSUpBUEKBUkICUIAhBkpCSIAUkgSSlJEmCkCSlBJASlCSQgiAJBCkJCEpKglJIgpIEQVKSpBQQoCQIKEFJUpIgICUJUpIUJCEIAiBJUkiSgIAEIQhJUpBCSoISJElSkIKSJCkhAQoCUkoSJEgSQBIkJQkgIQkpCUpSUkBISkFIkiRBiqQgBCkkSCkhJAhKSYKQJBSSlCQISZIAlIQCQUBIUpJKkJSQgCQkCcp/A/g3u6985fDDAAAAAElFTkSuQmCC">
+
     <title>WorkLog Pro 2026</title>
     <link rel="stylesheet" href="style.css">
+    <link rel="manifest" href="manifest.json">
 </head>
 <body>
 
     <header>
         <div id="total-surplus-val">--</div>
-        <span class="label">BILANCIO TOTALE GENERALE</span>
+        <span class="label">BILANCIO TOTALE</span>
     </header>
 
     <main id="main-content">
         <section id="today-section" class="app-section">
             <div class="card compact-picker">
-                <label>Data di registrazione</label>
+                <label>Giorno selezionato</label>
                 <input type="date" id="current-date-picker" onchange="loadDay(this.value)">
             </div>
             
@@ -42,7 +48,7 @@
             </div>
 
             <div class="card">
-                <h3>Stato & Range Multiplo</h3>
+                <h3>Stato & Range Periodo</h3>
                 <select id="absence-type" onchange="toggleAbsenceFields()">
                     <option value="none">Lavorativa</option>
                     <option value="festivo">Festivo / Ferie</option>
@@ -53,7 +59,7 @@
                 </select>
 
                 <div id="range-picker" style="margin-top:12px;">
-                    <label>Applica a periodo (Dal / Al):</label>
+                    <label>Applica periodo (Dal / Al):</label>
                     <div class="range-inputs">
                         <input type="date" id="range-start">
                         <input type="date" id="range-end">
@@ -127,12 +133,12 @@
 
         <section id="settings-section" class="app-section" style="display:none">
             <div class="card">
-                <h3>Backup & Export</h3>
-                <button class="action-btn" onclick="exportBackup()">SCARICA JSON (Backup)</button>
-                <button class="action-btn excel" onclick="exportToCSV()">ESPORTA EXCEL (CSV)</button>
+                <h3>Backup & Dati</h3>
+                <button class="action-btn" onclick="exportBackup()">SCARICA JSON</button>
+                <button class="action-btn excel" onclick="exportToCSV()">ESPORTA EXCEL</button>
                 <div style="margin-top:20px; border-top:1px solid #334155; padding-top:15px;">
-                    <label>Ripristina da file:</label>
-                    <input type="file" onchange="importBackup(event)">
+                    <label>Carica Backup:</label>
+                    <input type="file" id="import-file" onchange="importBackup(event)">
                 </div>
             </div>
         </section>
