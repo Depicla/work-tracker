@@ -5,6 +5,16 @@ if ('serviceWorker' in navigator) {
 
 let db = JSON.parse(localStorage.getItem('workDB')) || {};
 
+// Mappa delle traduzioni per le causali
+const causaliTradotte = {
+    'none': 'Lavorativa',
+    'festivo': 'Festivo / Ferie',
+    'sick': 'Malattia',
+    'trip': 'Trasferta',
+    'full-permit': 'Permesso Giornata',
+    'partial-permit': 'Permesso Orario'
+};
+
 document.addEventListener('DOMContentLoaded', () => {
     const todayStr = new Date().toISOString().split('T')[0];
     document.getElementById('current-date-picker').value = todayStr;
@@ -33,6 +43,7 @@ document.addEventListener('DOMContentLoaded', () => {
     setInterval(updateCountdown, 1000);
 });
 
+// --- NAVIGAZIONE ---
 function showSection(id) {
     document.querySelectorAll('.app-section').forEach(s => s.style.display = 'none');
     document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
@@ -42,8 +53,18 @@ function showSection(id) {
     if(id === 'analysis') renderAnalysis();
 }
 
-function timeToMins(t) { if(!t) return 0; const [h, m] = t.split(':').map(Number); return h * 60 + m; }
-function minsToTime(m) { const hh = Math.floor(m / 60); const mm = Math.floor(m % 60); return `${String(hh).padStart(2, '0')}:${String(mm).padStart(2, '0')}`; }
+// --- UTILITY TEMPO ---
+function timeToMins(t) {
+    if(!t) return 0;
+    const [h, m] = t.split(':').map(Number);
+    return h * 60 + m;
+}
+
+function minsToTime(m) {
+    const hh = Math.floor(m / 60);
+    const mm = Math.floor(m % 60);
+    return `${String(hh).padStart(2, '0')}:${String(mm).padStart(2, '0')}`;
+}
 
 function formatHHMM(m) {
     const absM = Math.abs(m);
@@ -66,6 +87,7 @@ function calculateDayMins(d) {
     return (end - start - lunch) + extra;
 }
 
+// --- LOGICA CORE ---
 function calculateLogic() {
     const d = {
         in: document.getElementById('time-in').value,
@@ -83,6 +105,7 @@ function calculateLogic() {
         if(d.lS && d.lE) lunch = Math.max(30, Math.min(90, timeToMins(d.lE) - timeToMins(d.lS)));
         const exitMins = timeToMins(d.in) + needed + lunch;
         document.getElementById('suggested-exit').innerText = minsToTime(exitMins);
+        
         if(d.out) {
             const worked = calculateDayMins(d);
             document.getElementById('daily-total').innerText = `${Math.floor(worked/60)}h ${worked%60}m`;
@@ -104,7 +127,9 @@ function loadDay(date) {
         document.getElementById('absence-type').value = d.type || 'none';
         document.getElementById('abs-start').value = d.aS || '';
         document.getElementById('abs-end').value = d.aE || '';
-    } else { document.getElementById('absence-type').value = 'none'; }
+    } else {
+        document.getElementById('absence-type').value = 'none';
+    }
     toggleAbsenceFields();
     calculateLogic();
 }
@@ -134,7 +159,7 @@ function saveLogic() {
         };
     }
     localStorage.setItem('workDB', JSON.stringify(db));
-    alert("Salvato!");
+    alert("Dati Salvati!");
     updateGlobalSurplus();
 }
 
@@ -172,9 +197,12 @@ function renderHistory() {
     Object.keys(db).sort().reverse().forEach(date => {
         if(!filter || date.startsWith(filter)) {
             const d = db[date];
+            // Traduzione causale per lo storico
+            const causaleDisplay = causaliTradotte[d.type] || d.type;
+            
             const div = document.createElement('div');
             div.className = 'card stat-row';
-            div.innerHTML = `<div><strong>${date}</strong><br><small>${d.type}</small></div>
+            div.innerHTML = `<div><strong>${date}</strong><br><small>${causaleDisplay}</small></div>
                 <div style="text-align:right">${formatHHMM(calculateDayMins(d)-480)}<br><button onclick="deleteDay('${date}')" style="color:red; background:none; border:none; font-size:10px">ELIMINA</button></div>`;
             div.onclick = (e) => { if(e.target.tagName !== 'BUTTON') { showSection('today'); document.getElementById('current-date-picker').value = date; loadDay(date); } };
             list.appendChild(div);

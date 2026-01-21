@@ -1,4 +1,4 @@
-const CACHE_NAME = 'worklog-v1';
+const CACHE_NAME = 'worklog-v2';
 const ASSETS = [
   'index.html',
   'style.css',
