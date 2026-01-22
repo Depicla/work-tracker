@@ -5,7 +5,6 @@ if ('serviceWorker' in navigator) {
 
 let db = JSON.parse(localStorage.getItem('workDB')) || {};
 
-// Mappa delle traduzioni per le causali
 const causaliTradotte = {
     'none': 'Lavorativa',
     'festivo': 'Festivo / Ferie',
@@ -19,7 +18,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const todayStr = new Date().toISOString().split('T')[0];
     document.getElementById('current-date-picker').value = todayStr;
     
-    // Inizializza Anni
     const yearSel = document.getElementById('filter-year');
     for(let y = 2030; y >= 2024; y--) {
         let o = document.createElement('option'); o.value = y; o.innerText = y;
@@ -27,7 +25,6 @@ document.addEventListener('DOMContentLoaded', () => {
         yearSel.appendChild(o);
     }
     
-    // Inizializza Mesi
     const monthNames = ["Gennaio","Febbraio","Marzo","Aprile","Maggio","Giugno","Luglio","Agosto","Settembre","Ottobre","Novembre","Dicembre"];
     const monthSel = document.getElementById('filter-month');
     monthNames.forEach((m, idx) => {
@@ -43,7 +40,6 @@ document.addEventListener('DOMContentLoaded', () => {
     setInterval(updateCountdown, 1000);
 });
 
-// --- NAVIGAZIONE ---
 function showSection(id) {
     document.querySelectorAll('.app-section').forEach(s => s.style.display = 'none');
     document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
@@ -53,7 +49,6 @@ function showSection(id) {
     if(id === 'analysis') renderAnalysis();
 }
 
-// --- UTILITY TEMPO ---
 function timeToMins(t) {
     if(!t) return 0;
     const [h, m] = t.split(':').map(Number);
@@ -87,8 +82,9 @@ function calculateDayMins(d) {
     return (end - start - lunch) + extra;
 }
 
-// --- LOGICA CORE ---
+// LOGICA AUTO-SAVE: Ogni volta che cambia qualcosa, salva!
 function calculateLogic() {
+    const date = document.getElementById('current-date-picker').value;
     const d = {
         in: document.getElementById('time-in').value,
         out: document.getElementById('time-out').value,
@@ -98,6 +94,12 @@ function calculateLogic() {
         aS: document.getElementById('abs-start').value,
         aE: document.getElementById('abs-end').value
     };
+
+    // Salvataggio silente immediato
+    db[date] = d;
+    localStorage.setItem('workDB', JSON.stringify(db));
+    updateGlobalSurplus();
+
     if(d.in) {
         const extra = (d.type === 'partial-permit' && d.aS && d.aE) ? (timeToMins(d.aE) - timeToMins(d.aS)) : 0;
         const needed = 480 - extra;
@@ -110,6 +112,9 @@ function calculateLogic() {
             const worked = calculateDayMins(d);
             document.getElementById('daily-total').innerText = `${Math.floor(worked/60)}h ${worked%60}m`;
             document.getElementById('daily-surplus').innerHTML = formatHHMM(worked - 480);
+        } else {
+            document.getElementById('daily-total').innerText = "0h 0m";
+            document.getElementById('daily-surplus').innerHTML = formatHHMM(0);
         }
     }
 }
@@ -135,7 +140,7 @@ function loadDay(date) {
 }
 
 function saveLogic() {
-    const mainDate = document.getElementById('current-date-picker').value;
+    // Il tasto ora serve principalmente per i range o per conferma visiva
     const startStr = document.getElementById('range-start').value;
     const endStr = document.getElementById('range-end').value;
     const type = document.getElementById('absence-type').value;
@@ -147,25 +152,19 @@ function saveLogic() {
             db[curr.toISOString().split('T')[0]] = { type, in:'', out:'', lS:'', lE:'', aS:'', aE:'' };
             curr.setDate(curr.getDate() + 1);
         }
+        localStorage.setItem('workDB', JSON.stringify(db));
+        alert("Periodo Salvato!");
+        updateGlobalSurplus();
     } else {
-        db[mainDate] = {
-            in: document.getElementById('time-in').value,
-            out: document.getElementById('time-out').value,
-            lS: document.getElementById('lunch-start').value,
-            lE: document.getElementById('lunch-end').value,
-            type: type,
-            aS: document.getElementById('abs-start').value,
-            aE: document.getElementById('abs-end').value
-        };
+        calculateLogic(); // Assicura che l'ultimo dato sia salvato
+        alert("Dati sincronizzati!");
     }
-    localStorage.setItem('workDB', JSON.stringify(db));
-    alert("Dati Salvati!");
-    updateGlobalSurplus();
 }
 
 function toggleAbsenceFields() {
     const t = document.getElementById('absence-type').value;
     document.getElementById('partial-permit-input').style.display = (t === 'partial-permit') ? 'block' : 'none';
+    calculateLogic(); // Salva il cambio di stato
 }
 
 function updateGlobalSurplus() {
@@ -197,9 +196,7 @@ function renderHistory() {
     Object.keys(db).sort().reverse().forEach(date => {
         if(!filter || date.startsWith(filter)) {
             const d = db[date];
-            // Traduzione causale per lo storico
             const causaleDisplay = causaliTradotte[d.type] || d.type;
-            
             const div = document.createElement('div');
             div.className = 'card stat-row';
             div.innerHTML = `<div><strong>${date}</strong><br><small>${causaleDisplay}</small></div>
@@ -216,11 +213,9 @@ function renderAnalysis() {
     const year = parseInt(document.getElementById('filter-year').value);
     const month = parseInt(document.getElementById('filter-month').value);
     const weekInput = new Date(document.getElementById('filter-week-date').value);
-    
     const day = weekInput.getDay() || 7;
     const mon = new Date(weekInput); mon.setDate(weekInput.getDate() - day + 1);
     const sun = new Date(mon); sun.setDate(mon.getDate() + 6);
-
     let wM = 0, mM = 0, yM = 0;
     Object.keys(db).forEach(dateStr => {
         const d = new Date(dateStr);
@@ -231,7 +226,6 @@ function renderAnalysis() {
         }
         if(d >= mon && d <= sun) wM += surplus;
     });
-
     document.getElementById('res-week').innerHTML = formatHHMM(wM);
     document.getElementById('res-month').innerHTML = formatHHMM(mM);
     document.getElementById('res-year').innerHTML = formatHHMM(yM);
