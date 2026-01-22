@@ -45,17 +45,25 @@ input, select {
     padding: 10px; border-radius: 10px; font-size: 16px; width: 100%; box-sizing: border-box;
 }
 
-.range-inputs { display: flex; gap: 6px; }
+.range-inputs { display: flex; gap: 6px; width: 100%; }
+.range-inputs input { flex: 1; }
 
 .result-card { background: linear-gradient(135deg, #1e293b, #2d3748); }
 .stat-row { display: flex; justify-content: space-between; margin: 4px 0; font-size: 0.9rem; }
-.mini-footer { margin-top: 8px; padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.1); font-size: 0.8rem; }
+.mini-footer { margin-top: 10px; padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: space-between; }
+.mini-stat { display: flex; flex-direction: column; align-items: center; font-size: 0.7rem; flex: 1; }
 .highlight { font-weight: bold; color: var(--accent); }
 
+/* Pulsanti Indigo */
 .save-btn {
-    display: block; width: calc(100% - 20px); margin: 15px 10px;
+    display: block; width: calc(100% - 20px); margin: 15px auto; 
     background: var(--accent); color: white; border: none; padding: 16px;
-    border-radius: 14px; font-weight: bold; font-size: 1rem;
+    border-radius: 14px; font-weight: bold; font-size: 1rem; text-align: center;
+}
+
+.mini-btn {
+    background: var(--accent); color: white; border: none;
+    padding: 10px 15px; border-radius: 10px; font-weight: bold; font-size: 0.75rem;
 }
 
 .action-btn {
@@ -64,15 +72,9 @@ input, select {
 }
 .action-btn.excel { background: #16a34a; }
 
-/* Dashboard Analisi */
-.dashboard-grid { display: flex; flex-direction: column; gap: 10px; padding: 10px; }
-.dash-card {
-    background: var(--card-bg); padding: 15px; border-radius: 18px;
-    border-left: 5px solid var(--accent);
-}
-.dash-label { font-size: 0.6rem; font-weight: bold; color: var(--text-dim); }
-.dash-val { font-size: 1.6rem; font-weight: 800; margin: 2px 0; }
-.dash-range { font-size: 0.7rem; color: var(--text-dim); }
+.dash-main-val { font-size: 1.6rem; font-weight: 800; margin: 2px 0; }
+.dash-details { display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--text-dim); margin: 5px 0; padding-top: 5px; border-top: 1px solid rgba(255,255,255,0.05); }
+.dash-card { background: var(--card-bg); padding: 15px; border-radius: 18px; border-left: 5px solid var(--accent); margin-bottom: 12px; }
 
 .week-glow { border-left-color: #6366f1; }
 .month-glow { border-left-color: #a855f7; }

@@ -13,14 +13,13 @@ const causaliTradotte = {
     'partial-permit': 'Permesso Orario'
 };
 
+// --- UTILITY ---
 function formatDate(date) {
     const d = new Date(date);
-    let month = '' + (d.getMonth() + 1);
-    let day = '' + d.getDate();
-    let year = d.getFullYear();
-    if (month.length < 2) month = '0' + month;
-    if (day.length < 2) day = '0' + day;
-    return [year, month, day].join('-');
+    let m = '' + (d.getMonth() + 1), dy = '' + d.getDate(), yr = d.getFullYear();
+    if (m.length < 2) m = '0' + m;
+    if (dy.length < 2) dy = '0' + dy;
+    return [yr, m, dy].join('-');
 }
 
 function getEaster(year) {
@@ -33,17 +32,28 @@ function getEaster(year) {
 }
 
 function isHoliday(dateStr) {
-    const d = new Date(dateStr);
-    const dayOfWeek = d.getDay(); 
-    if (dayOfWeek === 0 || dayOfWeek === 6) return true;
-    const year = d.getFullYear();
-    const fixedHolidays = ["01-01", "01-06", "04-25", "05-01", "06-02", "08-15", "09-21", "11-01", "12-08", "12-25", "12-26"];
-    if (fixedHolidays.includes(dateStr.substring(5))) return true;
-    const easter = getEaster(year);
-    const easterStr = formatDate(easter);
-    const easterMonday = new Date(easter); easterMonday.setDate(easter.getDate() + 1);
-    const easterMondayStr = formatDate(easterMonday);
-    return dateStr === easterStr || dateStr === easterMondayStr;
+    const d = new Date(dateStr), yr = d.getFullYear(), dow = d.getDay(); 
+    if (dow === 0 || dow === 6) return true;
+    const fixed = ["01-01", "01-06", "04-25", "05-01", "06-02", "08-15", "09-21", "11-01", "12-08", "12-25", "12-26"];
+    if (fixed.includes(dateStr.substring(5))) return true;
+    const easter = getEaster(yr), esStr = formatDate(easter);
+    const em = new Date(easter); em.setDate(easter.getDate() + 1);
+    const emStr = formatDate(em);
+    return dateStr === esStr || dateStr === emStr;
+}
+
+// FIX: Il Permesso Orario non chiude la giornata finché non c'è l'uscita
+function isDayClosed(d, dateStr) {
+    const todayStr = formatDate(new Date());
+    if (dateStr < todayStr) return true;
+    if (!d) return false;
+    // Se c'è un'uscita, è sempre chiusa
+    if (d.out !== "") return true;
+    // Se è un'assenza totale, è chiusa
+    const fullAbsenceTypes = ['festivo', 'sick', 'trip', 'full-permit'];
+    if (fullAbsenceTypes.includes(d.type)) return true;
+    // Se è 'none' o 'partial-permit' senza uscita, NON è chiusa
+    return false;
 }
 
 function calculateDayStats(d, dateStr) {
@@ -66,6 +76,7 @@ function calculateDayStats(d, dateStr) {
     return stats;
 }
 
+// --- CORE ---
 document.addEventListener('DOMContentLoaded', () => {
     const todayStr = formatDate(new Date());
     document.getElementById('current-date-picker').value = todayStr;
@@ -75,11 +86,10 @@ document.addEventListener('DOMContentLoaded', () => {
         if(y === new Date().getFullYear()) o.selected = true;
         yearSel.appendChild(o);
     }
-    const monthNames = ["Gennaio","Febbraio","Marzo","Aprile","Maggio","Giugno","Luglio","Agosto","Settembre","Ottobre","Novembre","Dicembre"];
     const monthSel = document.getElementById('filter-month');
-    monthNames.forEach((m, idx) => {
-        let o = document.createElement('option'); o.value = idx; o.innerText = m;
-        if(idx === new Date().getMonth()) o.selected = true;
+    ["Gennaio","Febbraio","Marzo","Aprile","Maggio","Giugno","Luglio","Agosto","Settembre","Ottobre","Novembre","Dicembre"].forEach((m, i) => {
+        let o = document.createElement('option'); o.value = i; o.innerText = m;
+        if(i === new Date().getMonth()) o.selected = true;
         monthSel.appendChild(o);
     });
     document.getElementById('filter-week-date').value = todayStr;
@@ -94,62 +104,72 @@ function goToToday() {
     loadDay(today);
 }
 
+function calculateLogic() {
+    const date = document.getElementById('current-date-picker').value;
+    const d = { in: document.getElementById('time-in').value, out: document.getElementById('time-out').value, lS: document.getElementById('lunch-start').value, lE: document.getElementById('lunch-end').value, type: document.getElementById('absence-type').value, aS: document.getElementById('abs-start').value, aE: document.getElementById('abs-end').value };
+    db[date] = d;
+    localStorage.setItem('workDB', JSON.stringify(db));
+    updateGlobalSurplus();
+    const stats = calculateDayStats(d, date);
+    document.getElementById('day-req').innerText = `${stats.required/60}h`;
+    document.getElementById('day-work').innerText = formatHHMM(stats.worked, false);
+    document.getElementById('day-surplus').innerHTML = formatHHMM(stats.surplus);
+    if(d.in) {
+        const needed = stats.required - stats.covered;
+        let lunch = (d.lS && d.lE) ? Math.max(30, Math.min(90, timeToMins(d.lE) - timeToMins(d.lS))) : 30;
+        document.getElementById('suggested-exit').innerText = minsToTime(timeToMins(d.in) + needed + lunch);
+    }
+}
+
+function loadDay(date) {
+    document.querySelectorAll('input[type="time"]').forEach(i => i.value = '');
+    document.getElementById('range-start').value = date; document.getElementById('range-end').value = date;
+    const d = db[date];
+    if(d) {
+        document.getElementById('time-in').value = d.in || ''; document.getElementById('time-out').value = d.out || '';
+        document.getElementById('lunch-start').value = d.lS || ''; document.getElementById('lunch-end').value = d.lE || '';
+        document.getElementById('absence-type').value = d.type || 'none'; document.getElementById('abs-start').value = d.aS || ''; document.getElementById('abs-end').value = d.aE || '';
+    } else { document.getElementById('absence-type').value = 'none'; }
+    toggleAbsenceFields(); calculateLogic();
+}
+
 function renderAnalysis() {
     const todayStr = formatDate(new Date());
-    const year = parseInt(document.getElementById('filter-year').value);
-    const month = parseInt(document.getElementById('filter-month').value);
-    const weekInput = new Date(document.getElementById('filter-week-date').value);
-    
-    const dayOfWeek = weekInput.getDay() || 7; 
-    const mon = new Date(weekInput); mon.setDate(weekInput.getDate() - dayOfWeek + 1);
+    const year = parseInt(document.getElementById('filter-year').value), month = parseInt(document.getElementById('filter-month').value);
+    const weekInputStr = document.getElementById('filter-week-date').value;
+    const weekDate = new Date(weekInputStr);
+    const dayOfWeek = weekDate.getDay() || 7; 
+    const mon = new Date(weekDate); mon.setDate(weekDate.getDate() - dayOfWeek + 1);
     const sun = new Date(mon); sun.setDate(mon.getDate() + 6);
+    let totals = { w: {req:0, work:0, sur:0}, m: {req:0, work:0, sur:0}, y: {req:0, work:0, sur:0} };
 
-    let totals = { 
-        w: {req:0, work:0, sur:0}, 
-        m: {req:0, work:0, sur:0}, 
-        y: {req:0, work:0, sur:0} 
-    };
-
-    // SETTIMANA (Bilancio fino a oggi se la settimana è in corso)
-    let tempW = new Date(mon);
+    let tw = new Date(mon);
     for(let i=0; i<7; i++) {
-        const dStr = formatDate(tempW);
-        const s = calculateDayStats(db[dStr], dStr);
+        const ds = formatDate(tw), s = calculateDayStats(db[ds], ds);
         totals.w.req += s.required; totals.w.work += s.worked;
-        if (dStr <= todayStr) totals.w.sur += s.surplus;
-        tempW.setDate(tempW.getDate() + 1);
+        if (isDayClosed(db[ds], ds)) totals.w.sur += s.surplus;
+        tw.setDate(tw.getDate() + 1);
     }
-
-    // MESE (Bilancio cumulativo fino a oggi)
-    let tempM = new Date(year, month, 1);
-    while(tempM.getMonth() === month) {
-        const dStr = formatDate(tempM);
-        const s = calculateDayStats(db[dStr], dStr);
+    let tm = new Date(year, month, 1);
+    while(tm.getMonth() === month) {
+        const ds = formatDate(tm), s = calculateDayStats(db[ds], ds);
         totals.m.req += s.required; totals.m.work += s.worked;
-        if (dStr <= todayStr) totals.m.sur += s.surplus;
-        tempM.setDate(tempM.getDate() + 1);
+        if (isDayClosed(db[ds], ds)) totals.m.sur += s.surplus;
+        tm.setDate(tm.getDate() + 1);
     }
-
-    // ANNO (Bilancio cumulativo fino a oggi)
-    let tempY = new Date(year, 0, 1);
-    while(tempY.getFullYear() === year) {
-        const dStr = formatDate(tempY);
-        const s = calculateDayStats(db[dStr], dStr);
+    let ty = new Date(year, 0, 1);
+    while(ty.getFullYear() === year) {
+        const ds = formatDate(ty), s = calculateDayStats(db[ds], ds);
         totals.y.req += s.required; totals.y.work += s.worked;
-        if (dStr <= todayStr) totals.y.sur += s.surplus;
-        tempY.setDate(tempY.getDate() + 1);
+        if (isDayClosed(db[ds], ds)) totals.y.sur += s.surplus;
+        ty.setDate(ty.getDate() + 1);
     }
-
-    const updateCard = (prefix, data) => {
-        document.getElementById(`res-${prefix}-surplus`).innerHTML = formatHHMM(data.sur);
-        document.getElementById(`res-${prefix}-req`).innerText = `${Math.floor(data.req/60)}h`;
-        document.getElementById(`res-${prefix}-work`).innerText = `${Math.floor(data.work/60)}h ${data.work%60}m`;
+    const up = (p, d) => {
+        document.getElementById(`res-${p}-surplus`).innerHTML = formatHHMM(d.sur);
+        document.getElementById(`res-${p}-req`).innerText = `${Math.floor(d.req/60)}h`;
+        document.getElementById(`res-${p}-work`).innerText = `${Math.floor(d.work/60)}h ${d.work%60}m`;
     };
-
-    updateCard('week', totals.w);
-    updateCard('month', totals.m);
-    updateCard('year', totals.y);
-
+    up('week', totals.w); up('month', totals.m); up('year', totals.y);
     document.getElementById('range-week').innerText = `${formatDate(mon)} - ${formatDate(sun)}`;
     document.getElementById('range-month').innerText = `Mese di ${document.getElementById('filter-month').options[month].text}`;
     document.getElementById('range-year').innerText = `Anno ${year}`;
@@ -157,27 +177,24 @@ function renderAnalysis() {
 
 function updateGlobalSurplus() {
     let total = 0;
-    const todayStr = formatDate(new Date());
     Object.keys(db).forEach(date => {
-        if (date <= todayStr) {
+        if (isDayClosed(db[date], date)) {
             total += calculateDayStats(db[date], date).surplus;
         }
     });
     document.getElementById('total-surplus-val').innerHTML = formatHHMM(total);
 }
 
-// --- RESTANTI FUNZIONI INVARIATE ---
-function calculateLogic() { const date = document.getElementById('current-date-picker').value; const d = { in: document.getElementById('time-in').value, out: document.getElementById('time-out').value, lS: document.getElementById('lunch-start').value, lE: document.getElementById('lunch-end').value, type: document.getElementById('absence-type').value, aS: document.getElementById('abs-start').value, aE: document.getElementById('abs-end').value }; db[date] = d; localStorage.setItem('workDB', JSON.stringify(db)); updateGlobalSurplus(); const stats = calculateDayStats(d, date); document.getElementById('day-req').innerText = `${stats.required/60}h`; document.getElementById('day-work').innerText = formatHHMM(stats.worked, false); document.getElementById('day-surplus').innerHTML = formatHHMM(stats.surplus); if(d.in) { const neededForBalance = stats.required - stats.covered; let lunch = (d.lS && d.lE) ? Math.max(30, Math.min(90, timeToMins(d.lE) - timeToMins(d.lS))) : 30; const exitMins = timeToMins(d.in) + neededForBalance + lunch; document.getElementById('suggested-exit').innerText = minsToTime(exitMins); } }
-function loadDay(date) { document.querySelectorAll('input[type="time"]').forEach(i => i.value = ''); document.getElementById('range-start').value = date; document.getElementById('range-end').value = date; const d = db[date]; if(d) { document.getElementById('time-in').value = d.in || ''; document.getElementById('time-out').value = d.out || ''; document.getElementById('lunch-start').value = d.lS || ''; document.getElementById('lunch-end').value = d.lE || ''; document.getElementById('absence-type').value = d.type || 'none'; document.getElementById('abs-start').value = d.aS || ''; document.getElementById('abs-end').value = d.aE || ''; } else { document.getElementById('absence-type').value = 'none'; } toggleAbsenceFields(); calculateLogic(); }
-function saveLogic() { const startStr = document.getElementById('range-start').value; const endStr = document.getElementById('range-end').value; const type = document.getElementById('absence-type').value; if (startStr !== endStr) { let curr = new Date(startStr); let end = new Date(endStr); while(curr <= end) { db[formatDate(curr)] = { type, in:'', out:'', lS:'', lE:'', aS:'', aE:'' }; curr.setDate(curr.getDate() + 1); } localStorage.setItem('workDB', JSON.stringify(db)); alert("Periodo Salvato!"); updateGlobalSurplus(); } else { calculateLogic(); alert("Sincronizzato!"); } }
-function showSection(id) { document.querySelectorAll('.app-section').forEach(s => s.style.display = 'none'); document.querySelectorAll('nav button').forEach(b => b.classList.remove('active')); document.getElementById(id + '-section').style.display = 'block'; document.getElementById('nav-' + id).classList.add('active'); if(id === 'history') renderHistory(); if(id === 'analysis') renderAnalysis(); }
+// Funzioni Standard
 function timeToMins(t) { if(!t) return 0; const [h, m] = t.split(':').map(Number); return h * 60 + m; }
-function minsToTime(m) { const hh = Math.floor(m / 60); const mm = Math.floor(m % 60); return `${String(hh).padStart(2, '0')}:${String(mm).padStart(2, '0')}`; }
-function formatHHMM(m, withArrow = true) { const absM = Math.abs(m); const hh = Math.floor(absM / 60); const mm = absM % 60; if(!withArrow) return `${hh}h ${mm}m`; const icon = m >= 0 ? "↑" : "↓"; const color = m >= 0 ? "#22c55e" : "#ef4444"; return `<span style="color:${color}">${icon} ${hh}h ${mm}m</span>`; }
+function minsToTime(m) { const hh = Math.floor(m / 60), mm = Math.floor(m % 60); return `${String(hh).padStart(2, '0')}:${String(mm).padStart(2, '0')}`; }
+function formatHHMM(m, wa = true) { const am = Math.abs(m), hh = Math.floor(am / 60), mm = am % 60; if(!wa) return `${hh}h ${mm}m`; const ic = m >= 0 ? "↑" : "↓", co = m >= 0 ? "#22c55e" : "#ef4444"; return `<span style="color:${co}">${ic} ${hh}h ${mm}m</span>`; }
 function toggleAbsenceFields() { document.getElementById('partial-permit-input').style.display = (document.getElementById('absence-type').value === 'partial-permit') ? 'block' : 'none'; calculateLogic(); }
-function updateCountdown() { const exitStr = document.getElementById('suggested-exit').innerText; if(exitStr !== '--:--') { const [h, m] = exitStr.split(':').map(Number); const exitTime = new Date(); exitTime.setHours(h, m, 0); const diff = exitTime - new Date(); if(diff > 0) { const hh = Math.floor(diff/3600000); const mm = Math.floor((diff%3600000)/60000); const ss = Math.floor((diff%60000)/1000); document.getElementById('countdown-timer').innerText = `${hh}h ${mm}m ${ss}s`; } else { document.getElementById('countdown-timer').innerText = "Fine turno!"; } } }
-function renderHistory() { const list = document.getElementById('history-list'); const filter = document.getElementById('history-filter').value; list.innerHTML = ''; const sortedKeys = Object.keys(db).sort().reverse(); sortedKeys.forEach(date => { if(!filter || date.startsWith(filter)) { const d = db[date]; const stats = calculateDayStats(d, date); const div = document.createElement('div'); div.className = 'card stat-row'; div.innerHTML = `<div><strong>${date}</strong><br><small>${causaliTradotte[d.type]}</small></div><div style="text-align:right">${formatHHMM(stats.surplus)}<br><button onclick="deleteDay('${date}')" style="color:red; background:none; border:none; font-size:10px">ELIMINA</button></div>`; div.onclick = (e) => { if(e.target.tagName !== 'BUTTON') { showSection('today'); document.getElementById('current-date-picker').value = date; loadDay(date); } }; list.appendChild(div); } }); }
-function deleteDay(date) { if(confirm("Eliminare?")) { delete db[date]; localStorage.setItem('workDB', JSON.stringify(db)); renderHistory(); updateGlobalSurplus(); } }
+function saveLogic() { const s = document.getElementById('range-start').value, e = document.getElementById('range-end').value, t = document.getElementById('absence-type').value; if (s !== e) { let c = new Date(s), l = new Date(e); while(c <= l) { db[formatDate(c)] = { type: t, in:'', out:'', lS:'', lE:'', aS:'', aE:'' }; c.setDate(c.getDate() + 1); } localStorage.setItem('workDB', JSON.stringify(db)); alert("Periodo Salvato!"); updateGlobalSurplus(); } else { calculateLogic(); alert("Sincronizzato!"); } }
+function showSection(id) { document.querySelectorAll('.app-section').forEach(s => s.style.display = 'none'); document.querySelectorAll('nav button').forEach(b => b.classList.remove('active')); document.getElementById(id + '-section').style.display = 'block'; document.getElementById('nav-' + id).classList.add('active'); if(id === 'history') renderHistory(); if(id === 'analysis') renderAnalysis(); }
+function renderHistory() { const l = document.getElementById('history-list'), f = document.getElementById('history-filter').value; l.innerHTML = ''; Object.keys(db).sort().reverse().forEach(d => { if(!f || d.startsWith(f)) { const stats = calculateDayStats(db[d], d); const div = document.createElement('div'); div.className = 'card stat-row'; div.innerHTML = `<div><strong>${d}</strong><br><small>${causaliTradotte[db[d].type]}</small></div><div style="text-align:right">${formatHHMM(stats.surplus)}<br><button onclick="deleteDay('${d}')" style="color:red; background:none; border:none; font-size:10px">ELIMINA</button></div>`; div.onclick = (e) => { if(e.target.tagName !== 'BUTTON') { showSection('today'); document.getElementById('current-date-picker').value = d; loadDay(d); } }; l.appendChild(div); } }); }
+function deleteDay(d) { if(confirm("Eliminare?")) { delete db[d]; localStorage.setItem('workDB', JSON.stringify(db)); renderHistory(); updateGlobalSurplus(); } }
 function exportBackup() { const blob = new Blob([JSON.stringify(db)], {type: 'application/json'}); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'backup_work.json'; a.click(); }
-function exportToCSV() { let csv = "Data,Entrata,Uscita,Tipo\n"; Object.keys(db).sort().forEach(k => csv += `${k},${db[k].in},${db[k].out},${db[k].type}\n`); const blob = new Blob([csv], {type: 'text/csv'}); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'timbrate.csv'; a.click(); }
-function importBackup(e) { const reader = new FileReader(); reader.onload = (event) => { try { const importedData = JSON.parse(event.target.result); db = importedData; localStorage.setItem('workDB', JSON.stringify(db)); alert("Backup caricato con successo!"); location.reload(); } catch (err) { alert("Errore nel caricamento del file!"); } }; reader.readAsText(e.target.files[0]); }
+function exportToCSV() { let csv = "sep=;\nData;Ora Inizio;Inizio Pausa;Fine Pausa;Ora Uscita;Tipologia Giornata;Permesso Orario;Totale Lavorato\n"; Object.keys(db).sort().forEach(date => { const d = db[date], causale = causaliTradotte[d.type] || "Lavorativa", stats = calculateDayStats(d, date); let pInfo = (d.type === 'partial-permit' && d.aS && d.aE) ? `Dalle ${d.aS} alle ${d.aE}` : ""; csv += `${date};${d.in||""};${d.lS||""};${d.lE||""};${d.out||""};${causale};${pInfo};${formatHHMM(stats.worked, false)}\n`; }); const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' }); const link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = `Report_Timbrate_${formatDate(new Date())}.csv`; link.click(); }
+function importBackup(e) { const reader = new FileReader(); reader.onload = (ev) => { try { db = JSON.parse(ev.target.result); localStorage.setItem('workDB', JSON.stringify(db)); alert("Backup caricato!"); location.reload(); } catch (err) { alert("Errore file!"); } }; reader.readAsText(e.target.files[0]); }
+function updateCountdown() { const es = document.getElementById('suggested-exit').innerText; if(es !== '--:--') { const [h, m] = es.split(':').map(Number), et = new Date(); et.setHours(h, m, 0); const diff = et - new Date(); if(diff > 0) { const hh = Math.floor(diff/3600000), mm = Math.floor((diff%3600000)/60000), ss = Math.floor((diff%60000)/1000); document.getElementById('countdown-timer').innerText = `${hh}h ${mm}m ${ss}s`; } else { document.getElementById('countdown-timer').innerText = "Fine turno!"; } } }

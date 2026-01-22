@@ -14,16 +14,16 @@
 <body>
     <header>
         <div id="total-surplus-val">--</div>
-        <span class="label">BILANCIO TOTALE GENERALE (AD OGGI)</span>
+        <span class="label">BILANCIO TOTALE GENERALE (SOLO CONCLUSI)</span>
     </header>
 
     <main id="main-content">
         <section id="today-section" class="app-section">
             <div class="card compact-picker">
                 <label>Giorno selezionato</label>
-                <div style="display:flex; gap:10px;">
+                <div style="display:flex; gap:10px; align-items: center;">
                     <input type="date" id="current-date-picker" onchange="loadDay(this.value)" style="flex:1;">
-                    <button onclick="goToToday()" class="action-btn" style="width:auto; margin:0; padding:0 15px; font-size:12px;">OGGI</button>
+                    <button onclick="goToToday()" class="mini-btn">OGGI</button>
                 </div>
             </div>
             
@@ -85,7 +85,7 @@
 
         <section id="analysis-section" class="app-section" style="display:none">
             <div class="card">
-                <h3>Filtri Dashboard</h3>
+                <h3>Filtri Analisi</h3>
                 <div class="input-grid">
                     <div class="input-group"><label>Anno</label><select id="filter-year" onchange="renderAnalysis()"></select></div>
                     <div class="input-group"><label>Mese</label><select id="filter-month" onchange="renderAnalysis()"></select></div>
