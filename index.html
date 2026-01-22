@@ -14,14 +14,19 @@
 <body>
     <header>
         <div id="total-surplus-val">--</div>
-        <span class="label">BILANCIO TOTALE</span>
+        <span class="label">BILANCIO TOTALE GENERALE (AD OGGI)</span>
     </header>
+
     <main id="main-content">
         <section id="today-section" class="app-section">
             <div class="card compact-picker">
                 <label>Giorno selezionato</label>
-                <input type="date" id="current-date-picker" onchange="loadDay(this.value)">
+                <div style="display:flex; gap:10px;">
+                    <input type="date" id="current-date-picker" onchange="loadDay(this.value)" style="flex:1;">
+                    <button onclick="goToToday()" class="action-btn" style="width:auto; margin:0; padding:0 15px; font-size:12px;">OGGI</button>
+                </div>
             </div>
+            
             <div class="card">
                 <h3>Timbrate</h3>
                 <div class="input-grid">
@@ -31,14 +36,17 @@
                     <div class="input-group"><label>Pausa Out</label><input type="time" id="lunch-end" onchange="calculateLogic()"></div>
                 </div>
             </div>
+
             <div class="card result-card">
                 <div class="stat-row"><span>Uscita Suggerita:</span><span id="suggested-exit" class="highlight">--:--</span></div>
                 <div class="stat-row"><span>Fine turno tra:</span><span id="countdown-timer" class="highlight">--:--:--</span></div>
                 <div class="stat-row mini-footer">
-                    <span>Lavorate: <b id="daily-total">0h 0m</b></span>
-                    <span>Surplus: <b id="daily-surplus">0h 0m</b></span>
+                    <div class="mini-stat"><span>Previste</span><b id="day-req">8h</b></div>
+                    <div class="mini-stat"><span>Lavorate</span><b id="day-work">0h 0m</b></div>
+                    <div class="mini-stat"><span>Surplus</span><b id="day-surplus">0h 0m</b></div>
                 </div>
             </div>
+
             <div class="card">
                 <h3>Stato & Range Periodo</h3>
                 <select id="absence-type" onchange="toggleAbsenceFields()">
@@ -49,13 +57,15 @@
                     <option value="full-permit">Permesso Giornata</option>
                     <option value="partial-permit">Permesso Orario</option>
                 </select>
+
                 <div id="range-picker" style="margin-top:12px;">
-                    <label>Applica periodo (Dal / Al):</label>
+                    <label>Applica a periodo (Dal / Al):</label>
                     <div class="range-inputs">
                         <input type="date" id="range-start">
                         <input type="date" id="range-end">
                     </div>
                 </div>
+
                 <div id="partial-permit-input" style="display:none; margin-top:12px;">
                     <label>Orario Permesso (Da / A):</label>
                     <div class="range-inputs">
@@ -64,27 +74,56 @@
                     </div>
                 </div>
             </div>
+
             <button class="save-btn" onclick="saveLogic()">SINCRONIZZA / RANGE</button>
         </section>
+
         <section id="history-section" class="app-section" style="display:none">
             <div class="card"><label>Filtra Mese</label><input type="month" id="history-filter" onchange="renderHistory()"></div>
             <div id="history-list"></div>
         </section>
+
         <section id="analysis-section" class="app-section" style="display:none">
             <div class="card">
-                <h3>Filtri Analisi</h3>
+                <h3>Filtri Dashboard</h3>
                 <div class="input-grid">
                     <div class="input-group"><label>Anno</label><select id="filter-year" onchange="renderAnalysis()"></select></div>
                     <div class="input-group"><label>Mese</label><select id="filter-month" onchange="renderAnalysis()"></select></div>
                 </div>
-                <div class="input-group" style="margin-top:10px;"><label>Settimana (Giorno)</label><input type="date" id="filter-week-date" onchange="renderAnalysis()"></div>
+                <div class="input-group" style="margin-top:10px;"><label>Settimana del giorno:</label><input type="date" id="filter-week-date" onchange="renderAnalysis()"></div>
             </div>
+
             <div class="dashboard-grid">
-                <div class="dash-card week-glow"><span class="dash-label">SETTIMANA</span><div id="res-week" class="dash-val">0h 0m</div><small id="range-week" class="dash-range">--</small></div>
-                <div class="dash-card month-glow"><span class="dash-label">MESE</span><div id="res-month" class="dash-val">0h 0m</div><small id="range-month" class="dash-range">--</small></div>
-                <div class="dash-card year-glow"><span class="dash-label">ANNO</span><div id="res-year" class="dash-val">0h 0m</div><small id="range-year" class="dash-range">--</small></div>
+                <div class="dash-card week-glow">
+                    <span class="dash-label">BILANCIO SETTIMANA</span>
+                    <div class="dash-main-val" id="res-week-surplus">0h 0m</div>
+                    <div class="dash-details">
+                        <span>Previste: <b id="res-week-req">0h</b></span>
+                        <span>Lavorate: <b id="res-week-work">0h</b></span>
+                    </div>
+                    <small id="range-week" class="dash-range">--</small>
+                </div>
+                <div class="dash-card month-glow">
+                    <span class="dash-label">BILANCIO MESE (AD OGGI)</span>
+                    <div class="dash-main-val" id="res-month-surplus">0h 0m</div>
+                    <div class="dash-details">
+                        <span>Previste: <b id="res-month-req">0h</b></span>
+                        <span>Lavorate: <b id="res-month-work">0h</b></span>
+                    </div>
+                    <small id="range-month" class="dash-range">--</small>
+                </div>
+                <div class="dash-card year-glow">
+                    <span class="dash-label">BILANCIO ANNUALE (AD OGGI)</span>
+                    <div class="dash-main-val" id="res-year-surplus">0h 0m</div>
+                    <div class="dash-details">
+                        <span>Previste: <b id="res-year-req">0h</b></span>
+                        <span>Lavorate: <b id="res-year-work">0h</b></span>
+                    </div>
+                    <small id="range-year" class="dash-range">--</small>
+                </div>
             </div>
         </section>
+
         <section id="settings-section" class="app-section" style="display:none">
             <div class="card">
                 <h3>Backup & Dati</h3>
@@ -92,11 +131,12 @@
                 <button class="action-btn excel" onclick="exportToCSV()">ESPORTA EXCEL</button>
                 <div style="margin-top:20px; border-top:1px solid #334155; padding-top:15px;">
                     <label>Carica Backup:</label>
-                    <input type="file" id="import-file" onchange="importBackup(event)">
+                    <input type="file" id="import-file-input" onchange="importBackup(event)">
                 </div>
             </div>
         </section>
     </main>
+
     <nav>
         <button onclick="showSection('today')" id="nav-today" class="active">Oggi</button>
         <button onclick="showSection('history')" id="nav-history">Storico</button>
