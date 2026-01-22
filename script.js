@@ -42,18 +42,17 @@ function isHoliday(dateStr) {
     return dateStr === esStr || dateStr === emStr;
 }
 
-// FIX: Il Permesso Orario non chiude la giornata finché non c'è l'uscita
 function isDayClosed(d, dateStr) {
     const todayStr = formatDate(new Date());
-    if (dateStr < todayStr) return true;
+    if (dateStr < todayStr) {
+        // Un giorno passato è "chiuso" e conta nel bilancio solo se l'hai registrato
+        return d !== undefined; 
+    }
     if (!d) return false;
-    // Se c'è un'uscita, è sempre chiusa
+    // Oggi conta solo se c'è un'uscita o è un'assenza totale
     if (d.out !== "") return true;
-    // Se è un'assenza totale, è chiusa
-    const fullAbsenceTypes = ['festivo', 'sick', 'trip', 'full-permit'];
-    if (fullAbsenceTypes.includes(d.type)) return true;
-    // Se è 'none' o 'partial-permit' senza uscita, NON è chiusa
-    return false;
+    const fullAbs = ['festivo', 'sick', 'trip', 'full-permit'];
+    return fullAbs.includes(d.type);
 }
 
 function calculateDayStats(d, dateStr) {
@@ -134,7 +133,6 @@ function loadDay(date) {
 }
 
 function renderAnalysis() {
-    const todayStr = formatDate(new Date());
     const year = parseInt(document.getElementById('filter-year').value), month = parseInt(document.getElementById('filter-month').value);
     const weekInputStr = document.getElementById('filter-week-date').value;
     const weekDate = new Date(weekInputStr);
@@ -185,7 +183,7 @@ function updateGlobalSurplus() {
     document.getElementById('total-surplus-val').innerHTML = formatHHMM(total);
 }
 
-// Funzioni Standard
+// Standard Utils
 function timeToMins(t) { if(!t) return 0; const [h, m] = t.split(':').map(Number); return h * 60 + m; }
 function minsToTime(m) { const hh = Math.floor(m / 60), mm = Math.floor(m % 60); return `${String(hh).padStart(2, '0')}:${String(mm).padStart(2, '0')}`; }
 function formatHHMM(m, wa = true) { const am = Math.abs(m), hh = Math.floor(am / 60), mm = am % 60; if(!wa) return `${hh}h ${mm}m`; const ic = m >= 0 ? "↑" : "↓", co = m >= 0 ? "#22c55e" : "#ef4444"; return `<span style="color:${co}">${ic} ${hh}h ${mm}m</span>`; }

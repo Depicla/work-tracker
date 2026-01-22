@@ -10,27 +10,20 @@
 
 body {
     font-family: -apple-system, system-ui, sans-serif;
-    background: var(--bg);
-    color: var(--text);
-    margin: 0;
-    padding-bottom: 120px;
-    overflow-x: hidden;
-    -webkit-tap-highlight-color: transparent;
+    background: var(--bg); color: var(--text); margin: 0;
+    padding-bottom: 120px; overflow-x: hidden; -webkit-tap-highlight-color: transparent;
 }
 
 header {
-    text-align: center;
-    padding: 30px 15px 15px;
-    background: rgba(15, 23, 42, 0.95);
-    position: sticky; top: 0; z-index: 1000;
+    text-align: center; padding: 30px 15px 15px;
+    background: rgba(15, 23, 42, 0.95); position: sticky; top: 0; z-index: 1000;
 }
 
 #total-surplus-val { font-size: 2rem; font-weight: 800; color: var(--accent); }
 .label { font-size: 0.65rem; color: var(--text-dim); letter-spacing: 1px; }
 
 .card {
-    background: var(--card-bg);
-    margin: 10px; padding: 15px; border-radius: 18px;
+    background: var(--card-bg); margin: 10px; padding: 15px; border-radius: 18px;
     border: 1px solid rgba(255,255,255,0.1);
 }
 
@@ -45,7 +38,7 @@ input, select {
     padding: 10px; border-radius: 10px; font-size: 16px; width: 100%; box-sizing: border-box;
 }
 
-.range-inputs { display: flex; gap: 6px; width: 100%; }
+.range-inputs { display: flex; gap: 6px; width: 100%; align-items: center; }
 .range-inputs input { flex: 1; }
 
 .result-card { background: linear-gradient(135deg, #1e293b, #2d3748); }
